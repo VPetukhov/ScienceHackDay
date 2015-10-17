@@ -46,19 +46,28 @@ def index(request):
         filename = d.namelist()[0]
         f = d.open(filename)  # zipped file
         personal_snps = {}
+        sex = 'female'
         for row in f:
             row = row.decode('utf-8').strip().split('\t')
-            rs = row[0]
+            if len(row) < 4:
+                continue
+            rsid, chromosome, position, genotype = row
+            if chromosome == 'Y':
+                sex = 'male'
             # use only rs-ID from the paper's snps
-            if rs in snps:
-                name = snps[rs][1]
-                paper = snps[rs][3]
+            if rsid in snps:
+                name = snps[rsid][1]
+                paper = snps[rsid][3]
                 person = row[3]
+                # make person similar to paper if they match
+                if (person[1] == paper[0]) or (person[0] == paper[1]):
+                    person = person[::-1]
                 personal_snps[name] = (paper, person)
 
         # TODO: Use personal_snps for face rendering
 
         return render(request, 'face.html', {
             'filename': filename,
-            'personal_snps': personal_snps
+            'personal_snps': personal_snps,
+            'sex': sex
         })

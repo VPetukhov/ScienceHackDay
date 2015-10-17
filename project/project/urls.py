@@ -18,5 +18,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^$', 'genomeapp.views.index', name='index'),
+    url(r'^genome/',  include('genomeapp.urls')),
+    url(r'^faceapp/', include('faceapp.urls'))
 ]

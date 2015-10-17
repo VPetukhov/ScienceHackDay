@@ -1,0 +1,20 @@
+<h1>Genome</h1>
+
+<p>Parsed: {{ filename }}</p>
+
+<table border="1">
+    <tr><th>Name</th><th>Paper</th><th>Person</th></tr>
+    {% for snp, value in personal_snps.items %}
+        <tr><td>{{ snp }}</td><td>{{ value.0 }}</td><td>{{ value.1 }}</td></tr>
+    {% endfor %}
+</table>
+
+<hr>
+
+<h1>Face</h1>
+
+<p>All your face are belong to us!</p>
+
+<p style="color:red">TODO: face here</p>
+
+<a href="/">Back</a>

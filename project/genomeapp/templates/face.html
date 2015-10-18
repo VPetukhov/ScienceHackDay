@@ -1,13 +1,14 @@
 <h1>Genome</h1>
 
-<p>Parsed: {{ filename }}</p>
-
-<p>Sex: {{ sex }}</p>
+<p>Parsed: <strong>{{ filename }}</strong></p>
+<p>Sex: <strong>{{ sex }}</strong></p>
 <p>Polymorphisms:</p>
-<table border="1">
+<table border="1" cellpadding="5" cellspacing="0">
     <tr><th>Name</th><th>Paper</th><th>Person</th></tr>
     {% for snp, value in personal_snps.items %}
-        <tr><td>{{ snp }}</td><td>{{ value.0 }}</td><td>{{ value.1 }}</td></tr>
+        <tr style="background-color: {% if value.0 == value.1 %}lightgreen{% else %}lightcoral{% endif %}">
+            <td>{{ snp }}</td><td>{{ value.0 }}</td><td>{{ value.1 }}</td>
+        </tr>
     {% endfor %}
 </table>
 
@@ -17,9 +18,9 @@
 
 <p>All your face are belong to us!</p>
 
-<p style="color:red">TODO: download <a href="{{ facemodel_url }}">this face</a> and drop here:</p>
+<p style="color:red">Please download <a href="{{ facemodel_url }}">your face</a> and drop below:</p>
 
-<iframe src="http://masc.cs.gmu.edu/objviewerframe.html?width=780&height=480&dropable=1&url={{ facemodel_absolute_url }}" width="800" height="500" border="0"></iframe>
+<iframe src="http://masc.cs.gmu.edu/objviewerframe.html?width=780&height=480&dropable=1&url={{ facemodel_absolute_url }}" width="800" height="500" style="border: 0"></iframe>
 
 <hr>
 

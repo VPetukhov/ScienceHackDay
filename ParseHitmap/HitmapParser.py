@@ -3,6 +3,7 @@ import os
 from PIL import Image
 import numpy as np
 
+
 def revert_color(color, scale):
 	return scale[color[0]][color[1]][color[2]]
 

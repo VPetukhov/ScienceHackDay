@@ -1,6 +1,5 @@
 from functools import reduce
 import math
-import bpy
 
 
 class Point:
@@ -13,7 +12,6 @@ class Point:
 def read_mesh(filename):
 	vertices = []
 	faces = []
-	normals = []
 
 	with open(filename) as file:
 		for row in file:
@@ -27,27 +25,24 @@ def read_mesh(filename):
 				vert.z = float(z)
 				vertices.append(vert)
 
-	for face in faces:
-		normals.append(get_normal(vertices[face[0] - 1], vertices[face[1] - 1], vertices[face[2] - 1]))
+	# vert_normals = [Point() for _ in vertices]
 
-	vert_normals = [Point() for _ in vertices]
-
-	for i in range(len(faces)):
-		vert0 = vert_normals[faces[i][0] - 1]
-		vert1 = vert_normals[faces[i][1] - 1]
-		vert2 = vert_normals[faces[i][2] - 1]
-
-		vert0.x += normals[i].x
-		vert1.x += normals[i].x
-		vert2.x += normals[i].x
-
-		vert0.y += normals[i].y
-		vert1.y += normals[i].y
-		vert2.y += normals[i].y
-
-		vert0.z += normals[i].z
-		vert1.z += normals[i].z
-		vert2.z += normals[i].z
+	# for i in range(len(faces)):
+	# 	vert0 = vert_normals[faces[i][0] - 1]
+	# 	vert1 = vert_normals[faces[i][1] - 1]
+	# 	vert2 = vert_normals[faces[i][2] - 1]
+	#
+	# 	vert0.x += normals[i].x
+	# 	vert1.x += normals[i].x
+	# 	vert2.x += normals[i].x
+	#
+	# 	vert0.y += normals[i].y
+	# 	vert1.y += normals[i].y
+	# 	vert2.y += normals[i].y
+	#
+	# 	vert0.z += normals[i].z
+	# 	vert1.z += normals[i].z
+	# 	vert2.z += normals[i].z
 
 	# for i in range(len(vertices)):
 	# 	norm = vert_normals[i]
@@ -55,16 +50,18 @@ def read_mesh(filename):
 	# 	norm.y *= -1
 	# 	norm.z *= -1
 
-	return vertices, faces, vert_normals
+	return vertices, faces
 
 
-def print_mesh(vertices, faces, normals, filename):
+def print_mesh(vertices, faces, filename):
+
+	normals = [get_normal(vertices[face[0] - 1], vertices[face[1] - 1], vertices[face[2] - 1]) for face in faces]
 	with open(filename, 'w') as file:
 		for v in vertices:
 			file.write('v %f %f %f\n' % (v.x, v.y, v.z))
 
-		for f in faces:
-			file.write('f %d//%d %d//%d %d//%d\n' % (f[0], f[0], f[1], f[1], f[2], f[2]))
+		for i, f in enumerate(faces):
+			file.write('f %d//%d %d//%d %d//%d\n' % (f[0], i + 1, f[1], i + 1, f[2], i + 1))
 
 		for n in normals:
 			file.write('vn %f %f %f\n' % (n.x, n.y, n.z))
@@ -146,10 +143,10 @@ def get_area_mask_vertices(mask, vertices, faces, mult):
 	for face in faces:
 		if (get_face_space(res_verts, face) / get_face_space(vertices, face) > 1.5):
 			rv_mid = get_face_mid(res_verts, face)
-			norm = get_normal(res_verts[face[0]], res_verts[face[1]], res_verts[face[2]])
+			norm = get_normal(res_verts[face[0] - 1], res_verts[face[1] - 1], res_verts[face[2] - 1])
 			# norm.x *= -1; norm.y *= -1; norm.z *= -1;
 			last_ind = len(res_verts)
-			norm_mult = 0.001
+			norm_mult = 0.000
 			res_verts.append(Point(rv_mid.x + norm.x * norm_mult, rv_mid.y + norm.y * norm_mult, rv_mid.z + norm.z * norm_mult))
 			# res_verts.append(rv_mid)
 			res_faces.append((face[0], face[1], last_ind + 1))
@@ -201,10 +198,10 @@ def run_displace(filename):
 
 
 def run_area(filename):
-	(vertices, faces, normals) = read_mesh('/Work/SHD/ScienceHackDay/Data/model.txt')
+	(vertices, faces) = read_mesh('/Work/SHD/ScienceHackDay/Data/model.txt')
 	mask = read_mask(filename + '.txt')
 	vertices, faces = get_area_mask_vertices(mask, vertices, faces, 5)
-	print_mesh(vertices, faces, normals, '/Work/SHD/ScienceHackDay/project/faceapp/static/faceapp/models/' + filename + '.obj')
+	print_mesh(vertices, faces, '/Work/SHD/ScienceHackDay/project/faceapp/static/faceapp/models/' + filename + '.obj')
 
 
 def normalize_vertices(vertices, size):
@@ -216,15 +213,15 @@ def normalize_vertices(vertices, size):
 
 
 def run(mutations, out_filename):
-	(vertices, faces, normals) = read_mesh('../Data/model.txt')
+	(vertices, faces) = read_mesh('../Data/model.txt')
 	for mutation in mutations:
 		mask = read_mask('../Data/Displace/' + mutation + '.txt')
 		displace_mask_vertices(mask, vertices, 0.03)
 
 	normalize_vertices(vertices, 1.0)
-	print_mesh(vertices, faces, normals, out_filename)
+	print_mesh(vertices, faces, out_filename)
 
 
 if __name__ == '__main__':
-	# run_area('Area')
-	run(['ROR2a', 'SATB2b', 'CTNND2a', 'SATB2e', 'DNMT3Bc', 'SEMA3E', 'POLR1Da', 'RAI1d', 'GDF5'], 'run.obj')
+	run_area('Area')
+	# run(['ROR2a', 'SATB2b', 'CTNND2a', 'SATB2e', 'DNMT3Bc', 'SEMA3E', 'POLR1Da', 'RAI1d', 'GDF5'], 'run.obj')

@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
+from .utils import read_mesh, print_mesh
 import zipfile
+import datetime
 
 ## SNPs from the paper below
 
@@ -35,6 +37,7 @@ snps = dict((row[2], row) for row in snps)
 
 ## SNPs from the paper above
 
+# Be aware: ugly code below
 @csrf_exempt
 def index(request):
     if request.method != 'POST':
@@ -64,10 +67,24 @@ def index(request):
                     person = person[::-1]
                 personal_snps[name] = (paper, person)
 
+        vertices, faces, vert_normals = read_mesh('faceapp/static/faceapp/models/baseface.obj')
+
+        for snp, value in personal_snps.items():
+            if value[0] == value[1]:
+                # TODO: apply heatmap from snp.txt or something like that
+                print('Applying heatmap for {}...'.format(snp))
+
+        now = int(datetime.datetime.now().timestamp())
+        result_url = '/static/faceapp/models/face-{}.obj'.format(now)
+        result_path = 'faceapp' + result_url
+        print_mesh(vertices, faces, vert_normals, result_path)
+
         # TODO: Use personal_snps for face rendering
 
         return render(request, 'face.html', {
             'filename': filename,
             'personal_snps': personal_snps,
-            'sex': sex
+            'sex': sex,
+            'facemodel_url': result_url,
+            'facemodel_absolute_url': 'http://ec2-52-30-55-26.eu-west-1.compute.amazonaws.com' + result_url  # the face will work when deployed only
         })

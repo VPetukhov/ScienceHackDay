@@ -72,7 +72,7 @@ def index(request):
                 personal_snps[name] = (paper, person)
 
         # Get default face model
-        vertices, faces, vert_normals = read_mesh('faceapp/static/faceapp/models/baseface.obj')
+        vertices, faces = read_mesh('faceapp/static/faceapp/models/baseface.obj')
 
         # Apply sex
         if sex == 'male':
@@ -89,8 +89,7 @@ def index(request):
         now = int(datetime.datetime.now().timestamp())
         result_url = '/static/faceapp/models/face-{}.obj'.format(now)
         result_path = 'faceapp' + result_url
-        print_mesh(vertices, faces, vert_normals, result_path)
-
+        print_mesh(vertices, faces, result_path)
 
         return render(request, 'face.html', {
             'filename': filename,

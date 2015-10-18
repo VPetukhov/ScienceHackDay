@@ -29,7 +29,6 @@ def get_normal(p1, p2, p3):
 def read_mesh(filename):
     vertices = []
     faces = []
-    normals = []
 
     with open(filename) as file:
         for row in file:
@@ -43,46 +42,17 @@ def read_mesh(filename):
                 vert.z = float(z)
                 vertices.append(vert)
 
-    for face in faces:
-        normals.append(get_normal(vertices[face[0] - 1], vertices[face[1] - 1], vertices[face[2] - 1]))
-
-    vert_normals = [Point() for _ in vertices]
-
-    for i in range(len(faces)):
-        vert0 = vert_normals[faces[i][0] - 1]
-        vert1 = vert_normals[faces[i][1] - 1]
-        vert2 = vert_normals[faces[i][2] - 1]
-
-        vert0.x += normals[i].x
-        vert1.x += normals[i].x
-        vert2.x += normals[i].x
-
-        vert0.y += normals[i].y
-        vert1.y += normals[i].y
-        vert2.y += normals[i].y
-
-        vert0.z += normals[i].z
-        vert1.z += normals[i].z
-        vert2.z += normals[i].z
-
-    # for i in range(len(vertices)):
-    # 	norm = vert_normals[i]
-    # 	norm.x *= -1
-    # 	norm.y *= -1
-    # 	norm.z *= -1
-
-    return vertices, faces, vert_normals
+    return vertices, faces
 
 
-def print_mesh(vertices, faces, normals, filename):
+def print_mesh(vertices, faces, filename):
+    normals = [get_normal(vertices[face[0] - 1], vertices[face[1] - 1], vertices[face[2] - 1]) for face in faces]
     with open(filename, 'w') as file:
         for v in vertices:
             file.write('v %f %f %f\n' % (v.x, v.y, v.z))
 
-        for f in faces:
-            # file.write('f %d %d %d\n' % (f[0], f[1],f[2]))
-            # file.write('f %d/1/%d %d1/1/%d %d/1/%d\n' % (f[0], f[0], f[1], f[1], f[2], f[2]))
-            file.write('f %d//%d %d//%d %d//%d\n' % (f[0], f[0], f[1], f[1], f[2], f[2]))
+        for i, f in enumerate(faces):
+            file.write('f %d//%d %d//%d %d//%d\n' % (f[0], i + 1, f[1], i + 1, f[2], i + 1))
 
         for n in normals:
             file.write('vn %f %f %f\n' % (n.x, n.y, n.z))

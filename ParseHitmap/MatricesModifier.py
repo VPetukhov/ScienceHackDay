@@ -1,5 +1,6 @@
 from functools import reduce
 import math
+import bpy
 
 
 class Point:
@@ -146,13 +147,14 @@ def get_area_mask_vertices(mask, vertices, faces, mult):
 		if (get_face_space(res_verts, face) / get_face_space(vertices, face) > 1.5):
 			rv_mid = get_face_mid(res_verts, face)
 			norm = get_normal(res_verts[face[0]], res_verts[face[1]], res_verts[face[2]])
-			norm.x *= -1; norm.y *= -1; norm.z *= -1;
+			# norm.x *= -1; norm.y *= -1; norm.z *= -1;
 			last_ind = len(res_verts)
-			norm_mult = 0.01
+			norm_mult = 0.001
 			res_verts.append(Point(rv_mid.x + norm.x * norm_mult, rv_mid.y + norm.y * norm_mult, rv_mid.z + norm.z * norm_mult))
-			res_faces.append((face[0], face[1], last_ind))
-			res_faces.append((face[0], face[2], last_ind))
-			res_faces.append((face[1], face[2], last_ind))
+			# res_verts.append(rv_mid)
+			res_faces.append((face[0], face[1], last_ind + 1))
+			res_faces.append((face[0], last_ind + 1, face[2]))
+			res_faces.append((face[1], face[2], last_ind + 1))
 		else:
 			res_faces.append(face)
 

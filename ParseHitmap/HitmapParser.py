@@ -161,6 +161,7 @@ def normalize_matrix_S34(matrix, max_ind):
 
 			row[i] /= max_ind
 
+
 def normalize_matrix_S39(matrix, mid_ind, max_ind):
 	for row in matrix:
 		for i in range(len(row)):
@@ -172,18 +173,19 @@ def normalize_matrix_S39(matrix, mid_ind, max_ind):
 
 def run(filename):
 	scale = get_colormap_S34()
+	# matrix = parse_heatmap('/Work/SHD/Heatmaps/Cutted/' + filename + '.png', scale)
 	matrix = parse_heatmap('/Work/SHD/Heatmaps/Cutted/Displace/' + filename + '.png', scale)
 	matrix = cut_matrix(matrix)
 	normalize_matrix_S34(matrix, scale[100][0][0]) #TODO Parameters
 	# normalize_matrix_S39(matrix, scale[127][255][127], scale[100][0][0]) #TODO Parameters
-	save_matrix(matrix, '../Data/Displace/' + filename + '.txt')
+	save_matrix(matrix, filename + '.txt')
 
 
 if __name__ == '__main__':
-	for f_name in listdir("/Work/SHD/Heatmaps/Cutted/Displace/"):
-		name = os.path.splitext(f_name)[0]
-		run(name)
+	# for f_name in listdir("/Work/SHD/Heatmaps/Cutted/Displace/"):
+	# 	name = os.path.splitext(f_name)[0]
+	# 	run(name)
 
-	# run('SLC35D')
+	run('Sex')
 	# run('WNT30')
 	# run('Area')

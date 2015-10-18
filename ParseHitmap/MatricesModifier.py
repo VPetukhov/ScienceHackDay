@@ -1,3 +1,4 @@
+from functools import reduce
 import math
 
 
@@ -62,8 +63,6 @@ def print_mesh(vertices, faces, normals, filename):
 			file.write('v %f %f %f\n' % (v.x, v.y, v.z))
 
 		for f in faces:
-			# file.write('f %d %d %d\n' % (f[0], f[1],f[2]))
-			# file.write('f %d/1/%d %d1/1/%d %d/1/%d\n' % (f[0], f[0], f[1], f[1], f[2], f[2]))
 			file.write('f %d//%d %d//%d %d//%d\n' % (f[0], f[0], f[1], f[1], f[2], f[2]))
 
 		for n in normals:
@@ -107,6 +106,14 @@ def displace_mask_vertices(mask, vertices, mult):
 			# vert.z = mult * ( mask[len(mask) - y - 1][x])
 
 
+def get_face_space(verts, face):
+	a = get_length(verts[face[0] - 1].x - verts[face[1] - 1].x, verts[face[0] - 1].x - verts[face[1] - 1].x, verts[face[0] - 1].x - verts[face[1] - 1].x)
+	b = get_length(verts[face[0] - 1].x - verts[face[2] - 1].x, verts[face[0] - 1].x - verts[face[2] - 1].x, verts[face[0 - 1]].x - verts[face[2] - 1].x)
+	c = get_length(verts[face[1] - 1].x - verts[face[2] - 1].x, verts[face[1] - 1].x - verts[face[2] - 1].x, verts[face[1] - 1].x - verts[face[2] - 1].x)
+	p = a + b + c
+	return math.sqrt(p * (p - a) * (p - b) * (p - c))
+
+
 def get_area_mask_vertices(mask, vertices, faces, mult):
 	(x_scale, x_disp, y_scale, y_disp) = get_scaling(vertices, mask)
 
@@ -114,11 +121,7 @@ def get_area_mask_vertices(mask, vertices, faces, mult):
 	res_verts = [Point() for _ in vertices]
 
 	for face in faces:
-		mid = Point(
-			(vertices[face[0] - 1].x + vertices[face[1] - 1].x + vertices[face[2] - 1].x) / 3,
-			(vertices[face[0] - 1].y + vertices[face[1] - 1].y + vertices[face[2] - 1].y) / 3,
-			(vertices[face[0] - 1].z + vertices[face[1] - 1].z + vertices[face[2] - 1].z) / 3
-		)
+		mid = get_face_mid(vertices, face)
 
 		x = int(mid.x * x_scale) + x_disp
 		y = int(mid.y * y_scale) + y_disp
@@ -138,7 +141,36 @@ def get_area_mask_vertices(mask, vertices, faces, mult):
 		vert.y = vert.y * mult / 3 + vertices[i].y
 		vert.z = vert.z * mult / 3 + vertices[i].z
 
-	return res_verts
+	res_faces = []
+	for face in faces:
+		if (get_face_space(res_verts, face) / get_face_space(vertices, face) > 1.5):
+			rv_mid = get_face_mid(res_verts, face)
+			norm = get_normal(res_verts[face[0]], res_verts[face[1]], res_verts[face[2]])
+			norm.x *= -1; norm.y *= -1; norm.z *= -1;
+			last_ind = len(res_verts)
+			norm_mult = 0.01
+			res_verts.append(Point(rv_mid.x + norm.x * norm_mult, rv_mid.y + norm.y * norm_mult, rv_mid.z + norm.z * norm_mult))
+			res_faces.append((face[0], face[1], last_ind))
+			res_faces.append((face[0], face[2], last_ind))
+			res_faces.append((face[1], face[2], last_ind))
+		else:
+			res_faces.append(face)
+
+	return res_verts, res_faces
+
+
+def get_face_mid(vertices, face):
+	mid = Point(
+		(vertices[face[0] - 1].x + vertices[face[1] - 1].x + vertices[face[2] - 1].x) / 3,
+		(vertices[face[0] - 1].y + vertices[face[1] - 1].y + vertices[face[2] - 1].y) / 3,
+		(vertices[face[0] - 1].z + vertices[face[1] - 1].z + vertices[face[2] - 1].z) / 3
+	)
+	return mid
+
+
+def get_length(x, y, z):
+	return math.sqrt(x ** 2 + y ** 2 + z ** 2)
+
 
 def get_normal(p1, p2, p3):
 	assert isinstance(p1, Point)
@@ -150,7 +182,7 @@ def get_normal(p1, p2, p3):
 	res.y = p1.z*(p2.x - p3.x) + p2.z * (p3.x - p1.x) + p3.z * (p1.x - p2.x)
 	res.z = p1.x*(p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y)
 
-	normalizer = math.sqrt(res.x ** 2 + res.y ** 2 + res.z ** 2)
+	normalizer = get_length(res.x, res.y, res.z)
 	res.x /= normalizer
 	res.y /= normalizer
 	res.z /= normalizer
@@ -169,11 +201,28 @@ def run_displace(filename):
 def run_area(filename):
 	(vertices, faces, normals) = read_mesh('/Work/SHD/ScienceHackDay/Data/model.txt')
 	mask = read_mask(filename + '.txt')
-	vertices = get_area_mask_vertices(mask, vertices, faces, 5)
+	vertices, faces = get_area_mask_vertices(mask, vertices, faces, 5)
 	print_mesh(vertices, faces, normals, '/Work/SHD/ScienceHackDay/project/faceapp/static/faceapp/models/' + filename + '.obj')
 
 
+def normalize_vertices(vertices, size):
+	normalizer = reduce(lambda base, vert: base + get_length(vert.x, vert.y, vert.z), vertices, 0) / len(vertices)
+	for vert in vertices:
+		vert.x *= size / normalizer
+		vert.y *= size / normalizer
+		vert.z *= size / normalizer
+
+
+def run(mutations, out_filename):
+	(vertices, faces, normals) = read_mesh('../Data/model.txt')
+	for mutation in mutations:
+		mask = read_mask('../Data/Displace/' + mutation + '.txt')
+		displace_mask_vertices(mask, vertices, 0.03)
+
+	normalize_vertices(vertices, 1.0)
+	print_mesh(vertices, faces, normals, out_filename)
+
+
 if __name__ == '__main__':
-	# run_displace('SLC35D')
-	# run_displace('WNT30')
-	run_area('Area')
+	# run_area('Area')
+	run(['ROR2a', 'SATB2b', 'CTNND2a', 'SATB2e', 'DNMT3Bc', 'SEMA3E', 'POLR1Da', 'RAI1d', 'GDF5'], 'run.obj')

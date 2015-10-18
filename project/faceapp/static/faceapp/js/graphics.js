@@ -70,7 +70,7 @@
         };
 
         var loader = new THREE.OBJLoader(manager);
-        loader.load('/static/faceapp/models/african_head.obj', function (object) {
+        loader.load('/static/faceapp/models/SLC35D.obj', function (object) {
             face = object;
             object.position.y = 0;
             scene.add(object);

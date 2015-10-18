@@ -45,9 +45,13 @@ def index(request):
     else:
         # Extract person's SNPs from the uploaded file
         dirname = request.FILES['23andme']
-        d = zipfile.ZipFile(dirname)  # zipped dir (with single file)
-        filename = d.namelist()[0]
-        f = d.open(filename)  # zipped file
+        try:
+            d = zipfile.ZipFile(dirname)  # zipped dir (with single file)
+            filename = d.namelist()[0]
+            f = d.open(filename)  # zipped file
+        except zipfile.BadZipFile:
+            filename = dirname
+            f = dirname  # just a plain text file
         personal_snps = {}
         sex = 'female'
         for row in f:
@@ -67,25 +71,26 @@ def index(request):
                     person = person[::-1]
                 personal_snps[name] = (paper, person)
 
+        # Get default face model
         vertices, faces, vert_normals = read_mesh('faceapp/static/faceapp/models/baseface.obj')
 
+        # Apply sex
         if sex == 'male':
             mask = read_mask('faceapp/static/faceapp/models/Displace/Sex.txt')
             displace_mask_vertices(mask, vertices, 0.05)
 
+        # Use personal_snps for face rendering:
         for snp, value in personal_snps.items():
             if value[0] == value[1]:
                 mask = read_mask('faceapp/static/faceapp/models/Displace/{}.txt'.format(snp))
                 displace_mask_vertices(mask, vertices, 0.05)
-                # TODO: apply heatmap from snp.txt or something like that
-                print('Applying heatmap for {}...'.format(snp))
 
+        # Save file
         now = int(datetime.datetime.now().timestamp())
         result_url = '/static/faceapp/models/face-{}.obj'.format(now)
         result_path = 'faceapp' + result_url
         print_mesh(vertices, faces, vert_normals, result_path)
 
-        # TODO: Use personal_snps for face rendering
 
         return render(request, 'face.html', {
             'filename': filename,

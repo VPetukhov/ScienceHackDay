@@ -69,10 +69,14 @@ def index(request):
 
         vertices, faces, vert_normals = read_mesh('faceapp/static/faceapp/models/baseface.obj')
 
+        if sex == 'male':
+            mask = read_mask('faceapp/static/faceapp/models/Displace/Sex.txt')
+            displace_mask_vertices(mask, vertices, 0.05)
+
         for snp, value in personal_snps.items():
             if value[0] == value[1]:
                 mask = read_mask('faceapp/static/faceapp/models/Displace/{}.txt'.format(snp))
-                displace_mask_vertices(mask, vertices, 0.03)
+                displace_mask_vertices(mask, vertices, 0.05)
                 # TODO: apply heatmap from snp.txt or something like that
                 print('Applying heatmap for {}...'.format(snp))
 

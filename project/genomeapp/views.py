@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from .utils import read_mesh, print_mesh
+from .utils import read_mesh, print_mesh, read_mask, displace_mask_vertices
 import zipfile
 import datetime
 
@@ -71,6 +71,8 @@ def index(request):
 
         for snp, value in personal_snps.items():
             if value[0] == value[1]:
+                mask = read_mask('faceapp/static/faceapp/models/Displace/{}.txt'.format(snp))
+                displace_mask_vertices(mask, vertices, 0.03)
                 # TODO: apply heatmap from snp.txt or something like that
                 print('Applying heatmap for {}...'.format(snp))
 
